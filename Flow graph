@@ -1,0 +1,151 @@
+#Program to implement generation of a flow graph
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX 100
+#define LEN 100
+
+typedef struct {
+    int start;
+    int end;
+} Block;
+
+char code[MAX][LEN];
+int leaders[MAX];
+int isLeader[MAX];
+Block blocks[MAX];
+int blockCount = 0;
+int n;
+
+// check whether statement is unconditional goto
+int isGoto(char *s) {
+    return strstr(s, "goto") != NULL;
+}
+
+// check whether statement is conditional jump
+int isIf(char *s) {
+    return strstr(s, "if") != NULL && strstr(s, "goto") != NULL;
+}
+
+// extract target line number from goto statement
+int getTarget(char *s) {
+    char *p = strstr(s, "goto");
+    if (p == NULL) return -1;
+    p += 4; // skip "goto"
+    while (*p == ' ') p++;
+    return atoi(p);
+}
+
+// find block number for a given statement line
+int findBlock(int line) {
+    for (int i = 0; i < blockCount; i++) {
+        if (line >= blocks[i].start && line <= blocks[i].end)
+            return i;
+    }
+    return -1;
+}
+
+int main() {
+    printf("Enter number of statements: ");
+    scanf("%d", &n);
+    getchar();
+
+    printf("Enter the statements (one per line):\n");
+    for (int i = 0; i < n; i++) {
+        fgets(code[i], LEN, stdin);
+        code[i][strcspn(code[i], "\n")] = '\0';
+    }
+
+    // Step 1: Identify leaders
+    memset(isLeader, 0, sizeof(isLeader));
+    isLeader[0] = 1;   // first statement is always a leader
+
+    for (int i = 0; i < n; i++) {
+        if (isGoto(code[i])) {
+            int target = getTarget(code[i]);
+            if (target >= 1 && target <= n)
+                isLeader[target - 1] = 1;   // target of jump is leader
+
+            if (i + 1 < n)
+                isLeader[i + 1] = 1;        // next statement is also leader
+        }
+    }
+
+    // store leaders
+    int leaderCount = 0;
+    for (int i = 0; i < n; i++) {
+        if (isLeader[i])
+            leaders[leaderCount++] = i;
+    }
+
+    // Step 2: Form basic blocks
+    for (int i = 0; i < leaderCount; i++) {
+        blocks[blockCount].start = leaders[i];
+        if (i == leaderCount - 1)
+            blocks[blockCount].end = n - 1;
+        else
+            blocks[blockCount].end = leaders[i + 1] - 1;
+        blockCount++;
+    }
+
+    // Display basic blocks
+    printf("\nBasic Blocks:\n");
+    for (int i = 0; i < blockCount; i++) {
+        printf("B%d:\n", i + 1);
+        for (int j = blocks[i].start; j <= blocks[i].end; j++) {
+            printf("  %d: %s\n", j + 1, code[j]);
+        }
+    }
+
+    // Step 3: Generate flow graph edges
+    printf("\nFlow Graph Edges:\n");
+    for (int i = 0; i < blockCount; i++) {
+        int lastStmt = blocks[i].end;
+
+        if (isIf(code[lastStmt])) {
+            int target = getTarget(code[lastStmt]);
+            int targetBlock = findBlock(target - 1);
+
+            if (targetBlock != -1)
+                printf("B%d -> B%d\n", i + 1, targetBlock + 1);
+
+            if (i + 1 < blockCount)
+                printf("B%d -> B%d\n", i + 1, i + 2);
+        }
+        else if (isGoto(code[lastStmt])) {
+            int target = getTarget(code[lastStmt]);
+            int targetBlock = findBlock(target - 1);
+
+            if (targetBlock != -1)
+                printf("B%d -> B%d\n", i + 1, targetBlock + 1);
+        }
+        else {
+            if (i + 1 < blockCount)
+                printf("B%d -> B%d\n", i + 1, i + 2);
+        }
+    }
+
+    return 0;
+}
+output:Enter the no of statements: 6
+enter the st per line:
+a = b+c
+if x<y goto 5
+d = e+f
+goto 6 
+t = a+d
+end
+
+basic blocks
+B1:
+B2:
+B3:
+B4:
+flow Graph Edges 
+B1==>B3
+1-->2
+2-->4
+3-->4
+
+
