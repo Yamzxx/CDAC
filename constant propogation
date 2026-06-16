@@ -1,0 +1,325 @@
+Code Optimization:
+If the compiler is an optimizing compiler, one of these stages "optimizes" the machine language code so that it either takes less time to run or occupies less memory or sometimes both. Of course, whatever optimizations the compiler does, it must not affect the logic of the program i.e. the optimization must preserve the meaning of the program. One might wonder what type of optimizations the compiler uses to produce efficient machine code? Since in no case the meaning of the program being compiled should be changed, the compiler must inspect the program very thoroughly and find out the suitable optimizations that can be applied. As we may wonder, such a thorough analysis of the program and then finding and applying suitable optimizations is a complex and time consuming process.
+A few type of code optimizations that the GNU C Compiler uses so that we can understand how the code is optimized and appreciate the complexity of the optimization process. The GNU C Compiler is a sophisticated optimizing C compiler that uses a large array of optimization techniques to produce efficient code. It may not be possible to describe all of them, so I have chosen some that are interesting and also easy to understand.
+	Constant Folding 
+	Common Subexpression Elimination 
+	Dead Code Elimination 
+	Strength Reduction using Induction Variable 
+	The GNU C Compiler is a sophisticated optimizing C compiler that uses a large array of optimization techniques to produce efficient code.
+	The GNU C Compiler (called GCC henceforth) reads a C program source file, however, it can also produce assembly language source code for the program instead of the object code, so that we can read it and understand how the assembly language program looks. 
+	We will be generating such assembly language files to see the optimizations being used by the compiler, so it would be beneficial if we see how the assembly language code for a simple C program looks like. 
+	This is optional phase described to improve the intermediate code so that the output runs faster and takes less space. Its output is another intermediate code program that does the some job as the original, but in a way that saves time and / or spaces.
+
+
+
+	1, Local Optimization:-
+There are local transformations that can be applied to a program to make an improvement. For example,
+ 	If A  >  B  goto L2 
+			Goto L3
+                                                   L2 :
+	This can be replaced by a single statement
+	If A  <  B  goto  L3
+Another important local optimization is the elimination of common sub-expressions
+	A := B + C + D
+	E := B + C + F
+Might be evaluated as
+	T1 :=  B   +   C
+	
+	A   := T1  +   D
+	E   :=  T1 +   F
+Take this advantage of the common sub-expressions B + C.
+2, Loop Optimization:-
+Another important source of optimization concerns about increasing the speed of   loops. A typical loop improvement is to move a computation that produces the same result each time around the loop to a point, in the program just before the loop is entered.
+
+                  In this we use  gcc compiler for compiling the program. Why because in cc compiler it is not possible to create assembly code  file. To create assembly file we use –S  option , through this we generate assembly file named as filename.s. To optimize this assembly code we use  -O2 option. 
+
+
+
+Aim: Showing the Code Optimization of different optimization techniques
+/* This first file simply demonstrates how the assembly program that the
+    compiler produces looks like and some peculiarities of the GNU
+   assembler that follows some different conventions from MASM/TASM.
+  */
+ #include <stdio.h>
+ int main()
+ {
+     printf("Hello, World\n");
+     return 0;
+ }
+OUTPUT:
+[gnanaprasuna @linuxserver ~]$ gcc  -c  –S  test1.c
+[gnanaprasuna @linuxserver ~]$ gcc  -c  –S  -O2  test1.c
+[gnanaprasuna @linuxserver ~]$vi  test1.s
+        .file   "test1.c"
+        .section        .rodata
+.LC0:
+        .string "Hello, World"
+        .text
+.globl main
+        .type   main, @function
+main:
+        leal    4(%esp), %ecx
+        andl    $-16, %esp
+        pushl   -4(%ecx)
+        pushl   %ebp
+        movl    %esp, %ebp
+        pushl   %ecx
+        subl    $4, %esp
+        movl    $.LC0, (%esp)
+        call    puts
+        movl    $0, %eax
+        addl    $4, %esp
+        popl    %ecx
+        popl    %ebp
+        leal    -4(%ecx), %esp
+        ret
+        .size   main, .-main
+        .ident  "GCC: (GNU) 4.1.2 20080704 (Red Hat 4.1.2-44)"
+        .section        .note.GNU-stack,"",@progbits
+
+
+
+
+
+
+
+
+
+Commands for checking the optimization of code:
+1.Create a file vi test1.c
+2.To generate the assembly language code, create a file test1.c as shown below and give the following command:
+	$ gcc -c -S test1.c
+3.To enable optimization use the following command.
+	gcc -c -S -O2 test2.c
+/*test2.c */
+/* Demonstration of constant propagation */
+  #include <stdio.h>
+   int main()
+  {
+      int x, y, z;
+      x = 10;
+      y = x + 45;
+     z = y + 4;
+     printf("The value of z = %d", z);
+     return 0;
+ }
+ /* end of test2.c */
+
+
+
+
+
+OUTPUT:
+[gnanaprasuna @linuxserver ~]$ gcc  -c  –S  test2.c
+[gnanaprasuna @linuxserver ~]$ gcc  -c  –S  -O2  test2.c
+[gnanaprasuna @linuxserver ~]$vi  test2.s
+        .file   "test2.c"
+        .section        .rodata
+.LC0:
+        .string "The value of z = %d"
+        .text
+.globl main
+        .type   main, @function
+main:
+        leal    4(%esp), %ecx
+        andl    $-16, %esp
+        pushl   -4(%ecx)
+        pushl   %ebp
+        movl    %esp, %ebp
+        pushl   %ecx
+        subl    $36, %esp
+        movl    $10, -16(%ebp)
+        movl    -16(%ebp), %eax
+        addl    $45, %eax
+        movl    %eax, -12(%ebp)
+        movl    -12(%ebp), %eax
+        addl    $4, %eax
+        movl    %eax, -8(%ebp)
+        movl    -8(%ebp), %eax
+        movl    %eax, 4(%esp)
+        movl    $.LC0, (%esp)
+        call    printf
+        movl    $0, %eax
+        addl    $36, %esp
+        popl    %ecx
+        popl    %ebp
+        leal    -4(%ecx), %esp
+        ret
+        .size   main, .-main
+        .ident  "GCC: (GNU) 4.1.2 20080704 (Red Hat 4.1.2-44)"
+        .section        .note.GNU-stack,"",@progbits
+
+
+
+
+
+
+
+
+
+
+
+/* test3.c */
+ /* common subexpression elimination, and also of constant propagation */
+#include <stdio.h>
+
+ int main()
+ {
+     int a, b;
+     int x, y, z;
+     scanf("%d %d", &a, &b);
+     x = a * b;
+
+   if(b >= 4)
+     {
+         y = a * b;
+         z = 0;
+     }
+     else
+     {
+         z = a * b * 4;
+         y = 0;
+     }
+
+     printf("x = %d, y = %d, z = %d\n", x, y, z);
+     return 0;
+ }
+OUTPUT:
+[gnanaprasuna @linuxserver ~]$ gcc  -c  –S  test3.c
+[gnanaprasuna @linuxserver ~]$ gcc  -c  –S  -O2  test3.c
+[gnanaprasuna @linuxserver ~]$vi  test3.s
+
+       .file   "test3.c"
+        .section        .rodata.str1.1,"aMS",@progbits,1
+.LC0:
+        .string "%d %d"
+.LC1:
+        .string "x = %d, y = %d, z = %d\n"
+        .text
+        .p2align 4,,15
+.globl main
+        .type   main, @function
+main:
+        leal    4(%esp), %ecx
+        andl    $-16, %esp
+        pushl   -4(%ecx)
+        pushl   %ebp
+        movl    %esp, %ebp
+        pushl   %ebx
+        xorl    %ebx, %ebx
+        pushl   %ecx
+        subl    $32, %esp
+        leal    -16(%ebp), %eax
+        movl    %eax, 8(%esp)
+        leal    -12(%ebp), %eax
+        movl    %eax, 4(%esp)
+        movl    $.LC0, (%esp)
+        call    scanf
+        movl    -16(%ebp), %eax
+        movl    %eax, %edx
+        imull   -12(%ebp), %edx
+        cmpl    $3, %eax
+        movl    %edx, %ecx
+        jg      .L4
+        leal    0(,%edx,4), %ebx
+        xorl    %ecx, %ecx
+.L4:
+        movl    %ebx, 12(%esp)
+        movl    %ecx, 8(%esp)
+        movl    %edx, 4(%esp)
+        movl    $.LC1, (%esp)
+        call    printf
+        addl    $32, %esp
+        xorl    %eax, %eax
+        popl    %ecx
+        popl    %ebx
+        popl    %ebp
+        leal    -4(%ecx), %esp
+        ret
+        .size   main, .-main
+        .ident  "GCC: (GNU) 4.1.2 20080704 (Red Hat 4.1.2-44)"
+        .section        .note.GNU-stack,"",@progbits
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* test4.c */
+ /* demonstration of dead code elimination */
+ #include <stdio.h>
+ int main()
+ {
+     int x;
+
+     scanf("%d", &x);
+
+     if(x < 0 && x > 0)
+     {
+         x = 99;
+         printf("Hello. Inside the if!!!");
+     }
+
+     return 0;
+ }
+ /* end of test4.c */
+
+ /* --------------------------------------------------------------- */
+
+
+
+
+
+OUTPUT:
+[gnanaprasuna@linuxserver ~]$ gcc  -c  –S  test4.c
+[gnanaprasuna @linuxserver ~]$ gcc  -c  –S  -O2  test4.c
+[gnanaprasuna @linuxserver ~]$vi  test4.s
+
+        .section        .rodata.str1.1,"aMS",@progbits,1
+.LC0:
+        .string "%d"
+        .text
+        .p2align 4,,15
+.globl main
+        .type   main, @function
+main:
+        leal    4(%esp), %ecx
+        andl    $-16, %esp
+        pushl   -4(%ecx)
+        pushl   %ebp
+        movl    %esp, %ebp
+        pushl   %ecx
+        subl    $36, %esp
+        leal    -8(%ebp), %eax
+        movl    %eax, 4(%esp)
+        movl    $.LC0, (%esp)
+        call    scanf
+        addl    $36, %esp
+        xorl    %eax, %eax
+        popl    %ecx
+        popl    %ebp
+        leal    -4(%ecx), %esp
+        ret
+        .size   main, .-main
+        .ident  "GCC: (GNU) 4.1.2 20080704 (Red Hat 4.1.2-44)"
+        .section        .note.GNU-stack,"",@progbits
+
+
+
+
