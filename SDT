@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 50
+#define LINE 200
+
+// trim leading/trailing spaces (in-place)
+void trim(char *s) {
+    int i = 0;
+    while (isspace((unsigned char)s[i])) i++;
+    if (i > 0) memmove(s, s + i, strlen(s + i) + 1);
+
+    int n = (int)strlen(s);
+    while (n > 0 && isspace((unsigned char)s[n - 1])) s[--n] = '\0';
+}
+
+int main() {
+    int n;
+    char prod[MAX][LINE];
+
+    printf("Enter number of productions: ");
+    if (scanf("%d", &n) != 1 || n <= 0 || n > MAX) return 0;
+    getchar(); // consume newline
+
+    printf("Enter productions (example: E -> E + T):\n");
+    for (int i = 0; i < n; i++) {
+        fgets(prod[i], LINE, stdin);
+        prod[i][strcspn(prod[i], "\n")] = '\0';
+        trim(prod[i]);
+    }
+
+    printf("\nOutput with SDT actions:\n");
+    for (int i = 0; i < n; i++) {
+        char line[LINE];
+        strcpy(line, prod[i]);
+
+        // We will detect RHS by splitting on "->"
+        char *arrow = strstr(line, "->");
+        if (!arrow) {
+            // not a valid production, print as-is
+            printf("%s\n", prod[i]);
+            continue;
+        }
+
+        // LHS is before arrow, RHS after arrow
+        char lhs[50], rhs[LINE];
+        int lhs_len = (int)(arrow - line);
+        strncpy(lhs, line, lhs_len);
+        lhs[lhs_len] = '\0';
+        strcpy(rhs, arrow + 2);
+
+        trim(lhs);
+        trim(rhs);
+
+        // Print original production first
+        printf("%s\n", prod[i]);
+
+        // Decide which SDT action to append (based on RHS)
+        // Case 1: E -> E + T  => print('+')
+        if (strchr(rhs, '+') != NULL) {
+            printf("{ print('+') }\n");
+        }
+        // Case 2: T -> 0  => print('0')
+        else if (strcmp(rhs, "0") == 0) {
+            printf("{ print('0') }\n");
+        }
+        // Case 3: T -> 1  => print('1')
+        else if (strcmp(rhs, "1") == 0) {
+            printf("{ print('1') }\n");
+        }
+
+        // For rules like E -> T, no action is added (as per your example)
+    }
+
+    return 0;
+}
+Output:
+Enter number of production: 2
+enter productions (example: E -> E + T):
+E -> E + T
+E -> 1
+Output with SDT actions :
+E - > E+T
+{print ('+')
+E - >1
+{print('1')]
+
+
+Output:
+
