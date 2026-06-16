@@ -1,0 +1,160 @@
+.Intermediate code generation
+Three-address code is a sequence of instructions of the form
+x - y op z
+where x, y, and z are names, constants, or compiler-generated temporaries; and op stands for an operator.
+Data structures for implementing three address code are as follows
+	Quadruples
+	Has four fields: op, arg1, arg2 and result
+	Triples
+	Temporaries are not used and instead references to instructions are made
+	Indirect triples
+	In addition to triples we use a list of pointers to triples
+
+Intermediate code generation
+Procedure:
+1.	Create a lex specification file to recognize tokens in the grammar
+2.	Create a Yacc specification file to parse the tokens in the grammar
+3.	Compile lex and yacc files to generate C files
+4.	Now compile both the c files using C compiler to get executable file
+5.	Run the executable file to get the desired output by providing necessary input
+
+Program:
+//Inter.l
+
+%{
+#include "y.tab.h"
+extern char yyval;
+%}
+NUMBER [0-9]+
+LETTER [a-zA-Z]+
+%%
+{NUMBER} {yylval.sym=(char)yytext[0];
+          return NUMBER;}
+{LETTER} {yylval.sym=(char)yytext[0];return LETTER;}
+\n {return 0;}
+. {return yytext[0];}
+
+//inter.y
+%{
+#include<stdio.h>
+#include<string.h>
+int nIndex=0;
+struct InterCode
+{
+char operand1;
+char operand2;
+char opera;
+};
+%}
+%union
+{
+char sym;
+}
+%token <sym> LETTER NUMBER
+%type <sym> expr
+%left '-' '+'
+%right '*' '/'
+%%
+statement:LETTER '=' expr ';' {AddToTable((char)$1,(char)$3,'=');}
+         |expr ';'
+         ;
+expr : expr '+'expr {$$=AddToTable((char)$1,(char)$3,'+');}
+      |expr '-'expr {$$=AddToTable((char)$1,(char)$3,'-');}
+      |expr '*'expr {$$=AddToTable((char)$1,(char)$3,'*');}
+      |expr '/'expr {$$=AddToTable((char)$1,(char)$3,'/');}
+      |'('expr')' {$$=(char)$2;}
+      |NUMBER  {$$=(char)$1;}
+      |LETTER  {$$=(char)$1;}
+;
+%%
+yyerror(char *s)
+{
+printf("%s",s);
+exit(0);
+}
+struct InterCode Code[20];
+char AddToTable(char operand1,char operand2,char opera){
+char temp='A';
+Code[nIndex].operand1=operand1;
+Code[nIndex].operand1=operand2;
+Code[nIndex].opera=opera;
+nIndex++;
+temp++;
+return temp;
+}
+ThreeAddressCode()
+{
+int nCnt=0;
+char temp='A';
+printf("\n\n\tTHREE ADDRESS CODE");
+temp++;
+while(nCnt<nIndex)
+{
+printf("%c:=\t",temp);
+if(isalpha(Code[nCnt].operand1))
+   printf("%c\t",Code[nCnt].operand1);
+else
+   printf("%c\t",temp);
+printf("%c\t",Code[nCnt].opera);
+if(isalpha(Code[nCnt].operand2))
+printf("%c\t",Code[nCnt].operand2);
+else
+printf("%c\t",temp);
+printf("\n");
+nCnt++;
+temp++;
+}
+}
+void Quadruples()
+{
+int nCnt=0;
+char temp='A';
+temp++;
+printf("\n\n\tQuadruples\n");
+printf("\n ID OPERATOR OPERAND1 OPERAND2 RESULT\n");
+while(nCnt<nIndex)
+{
+printf("\n(%d) \t %c\t",nCnt,Code[nCnt].opera);
+if(isalpha(Code[nCnt].operand1))
+printf("%c\t",Code[nCnt].operand1);
+else
+printf("%c\t",temp);
+if(isalpha(Code[nCnt].operand2))
+printf("%c\t",Code[nCnt].operand2);
+else
+printf("%c\t",temp);
+printf("%c\t",temp);
+printf("\n");
+nCnt++;
+temp++;
+}
+}
+main()
+{
+printf("\nEnter the expression\n");
+yyparse();
+ThreeAddressCode();
+Quadruples();
+}
+yywrap()
+{
+return 1;
+}    
+
+Output:
+administrator@ubuntu:~/Desktop$ flex th.l
+administrator@ubuntu:~/Desktop$ yacc -d th.y
+administrator@ubuntu:~/Desktop$ gcc lex.yy.c y.tab.c -ll -lm
+administrator@ubuntu:~/Desktop$ ./a.out
+administrator@ubuntu:~/Desktop$ ./a.out
+Enter the Expression: a=((b+c)*(d/e));
+THREE ADDRESS CODE
+B : = b + c
+C : = d / e
+D : = B * C
+E : = a = D
+QUADRAPLE CODE
+0 + b c G
+1 / d e H
+2 * B C I
+3 = a D J
