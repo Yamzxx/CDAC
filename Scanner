@@ -1,0 +1,262 @@
+ 2. Program to implement Scanner Generation for a sample c program using LEX
+LEX:   LEX is one of the compiler construction tools. Through this we can generate stream of tokens from the given input stream. Compilation process of it is shown bellow.
+
+Lex source program                                                        lex.yy.c
+lex.l
+          lex.yy.c                                                                   a.out
+
+          input stream                                                         stream of tokens
+
+Structure of lex specification File:
+It contains three parts
+%{
+        Declaration part
+%}
+%%
+ Rule section        --------- patterns     {  Action  }
+Auxalary functions
+
+First, a specification of a lexical analyzer is prepared by creating a program lex.1 in the 
+Lex language. Then, lex.I is run through the Lex compiler to produce a C 
+program lex. yy. c. The program lex. yy. c consists of a tabular represen-
+tation of a transition diagram constructed from the regular expressions of 
+lex. 1, together with a standard routine that uses the table to recognize lex-
+emes. The actions associated with regular expressions in lex.1 are pieces of 
+C code and are carried over directly to lex.yy. c. Finally, lex.yy. c is run 
+through the C compiler to produce an object program a.oat, which is the 
+lexical analyzer that transforms an input stream into a sequence of tokens. 
+
+
+Viva Questions
+
+1)	What is LEX lexical analyzer generator?
+2)	Differentiate token,lexeme,pattern?
+3)	What  rule section contains ?
+4)	What Declaration section contains?
+5)	What Auxiliary procedure section contains?
+2. Program to implement Scanner Generation for a sample c program using LEX 
+
+Procedure:
+
+
+1. Start the program 
+
+2. Open a file file.c in read and include the yylex() tool for input scanning. 
+
+3. Define the alphabets and numbers. 
+
+4. Print the preprocessor, function, keyword using yytext.lex tool.
+
+6.	Print the relational, assignment and all the operator using yytext() tool.
+
+7.	 Also scan and print where the loop ends and begins. 
+
+8.	Use yywrap() to enter an error. 
+
+9.	Stop the program.
+
+
+Program
+/*program name is lexp.l*/
+
+%{
+/*program to recognize a c program*/
+int COMMENT=0;
+%}
+identifier [a-zA-Z][a-zA-Z0-9]*
+%%
+#.* {printf ("\n%s is PREPROCESSOR DIRECTIVE",yytext);}
+
+int |
+float |
+char  |
+double |
+while |
+for |
+do |
+if |
+break |
+continue |
+void |
+switch |
+case |
+long |
+struct |
+const |
+typedef |
+ 	return |
+else |
+        goto  {printf("\n\t%s is KEYWORD",yytext);}
+        "*/"	{COMMET=1;}
+			/*{printf("\n\n\t%s is a COMMENT\n",yytext);}*/
+{identifier}\(    {if(!COMMENT)printf("\n\nFUNCTION\n\t%s",yytext);}
+        \{		{if(!COMMENT) printf("\n BLOCK BEGINS");}
+        \}		{IF(!COMMENT) printf("\n BLOCK ENDS");}
+ {identifier}(\[[0-9]*\])?{if(!COMMENT) 
+printf("\n%s IDENTIFIER", yytext);
+}
+\".*\"		{if(!COMMENT) printf("\n\t%s is a STRING",yytext);}
+[0-9]+	{if(!COMMENT) printf("\n\t%s IS A NUMBER",YYTEXT);}
+\)(\;)? 	{if(!COMMENT) printf("\n\t");ECHO;printf("\n");}
+\(		ECHO;
+=	 {if(!COMMENT)printf("\n\t%s is an ASSIGNMENT OPERATOR",yytext);}
+\<= |
+\>= |
+\< |
+== |
+\> 	 {if(!COMMENT) printf("\n\t%s is a RELATIONAL 					OPERATOR",yytext);
+}
+|\n	;
+
+%%
+int main(int argc,char **argv)   /* MAIN FUNCTION  */
+{
+	if(argc > 1)
+	{
+		FILE *file;
+		File = fopen(argv[1],”r”);
+		if(!file)
+		{
+			printf(“could not open %s\n”,argv[1]);
+			exit(0);
+
+		}
+		yyin=file;
+	}
+	yylex();
+	printf(“\n\n”);
+	return 0;
+}
+
+int yywrap()
+{
+	return 0;
+}
+
+/*-------------------End of lexp.l----------------------*/
+
+/*Program named as area.c*/
+
+#include<stdio.h>
+#include<stdlib.h>
+double area_of_circle(double r);
+
+int main()
+{
+	if(argc<2)   /*this is a single line comment*/
+	{
+		printf("usage: %s radius\n",argv[0]);
+		exit(1);
+	}
+	else
+	{
+
+/*this is a double line comment */
+
+		double radius=atof(argv[1]);
+		double area=area_of_circle(radius);
+		printf("Area of circle with radius %f=%f\n",radius,area);
+	}
+	return 0;	/*returning 0 */
+}
+
+
+OUTPUT:
+	
+[localhost@gnanaprasuna]#lex lexp.l
+[localhost@gnanaprasuna]#cc lex.yy.c
+[localhost@gnanaprasuna]#./a.out area.c
+
+#include<stdio.h> is a PREPROCESSOR DIRECTIVE
+#include<stdlib.h> is a PREPROCESSOR DIRECTIVE
+double is a KEYWORD
+
+Function
+
+		area_of_circle(
+		double is KEYWORD
+		r is an IDENTIFIER
+		);
+
+		int is a KEYWORD
+
+Function 
+		main
+                (
+		int is a KEYWORD
+		argc IDENTIFIER
+		char is a KEYWORD
+		argv[] IDENTIFIER
+		)
+
+	 BLOCK BEGINS
+		if is a KEYWORD
+		(
+		argc IDENTIFIER
+		< is a  RELATIONAL OPERATOR
+		2 is a NUMBER
+		)
+
+		/*This is a single line comment*/ is a COMMENT
+
+	BLOCK BEGINS
+
+FUNCTION
+
+		printf(
+		“Usage: %s radius \n” is a STRING
+		argv[0] IDENTIFIER
+		);
+
+FUNCTION
+
+		exit(
+		1 is a NUMBER
+		);
+
+	BLOCK ENDS
+		else is Akeyword
+	BLOCK BEGINS
+		double is KEYWORD
+		radius IDENTIFIER
+		= is an ASSIGNMENT OPERATOR
+
+
+
+FUNCTION
+		atof(
+		argv[1] IDENTIFIER
+		
+                 );
+		double is a KEYWORD
+		area IDENTIFIER
+		=is an ASSIGNMENT OPERATOR
+
+       FUNCTION
+		printf(
+		“Area of circle with radius %f=%f\n” is a STRING
+		radius IDENTIFIER
+		area IDENTIFIER
+		);
+	BLOCK ENDS
+		return is a KEYWORD
+		0 is a NUMBER
+
+		//Returning 0 is a COMMENT
+	BLOCK ENDS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
