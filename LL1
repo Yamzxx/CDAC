@@ -1,0 +1,153 @@
+LL(1) Parser:
+Alogorithm:
+Input: A CFG
+Output: Is the predictive parsing table
+Procedure:
+1.	For each production in the grammer G the following operations are done a.For each terminal in the FIRST(α), add A α to M[A,a]. 
+b. manipulate  ε
+•	If ε ϵ FIRST(α), then foe each terminal b ϵ FOLLOW(A) add A α to M[A,a].
+•	If ε ϵ FIRST(α), and $ in FOLLOW(A) then add A α to M[A, $].
+2.	An error can be detected from empty entries in table   M[A,a], since there is no production for that entry with a pair A and a.For LL(1) grammers there is one production for each entry. For other grammers there can be several productions in one entry.   
+
+Implementation of  LL(1) parsing table
+
+
+#include<stdlib.h>
+#include<stdio.h>
+#include<string.h>
+#include<conio.h>
+#include<ctype.h>
+
+	void main()
+    {
+	int i,j,h,k,r,m,n,t,nt;
+    char prod[15][10], first[15][30], follow[15][30],terminals[10],nonterminals[10];
+	static char table[10][10][10]={" "};
+   
+	*table[0][0]='X';
+    //clrscr();
+    printf("total no of productions\t no of terminals and \t nonterminals");
+    scanf("%d%d%d",&n,&t,&nt);
+    printf("\n\nenter production in this format LEFT-->RIGHT\n");
+    for(i=0;i<n;i++)
+        {
+        printf("\nenter production%d \n", i+1);
+        scanf("%s",&prod[i]);
+        }
+	printf("\nenter the values of non terminals\n");
+	
+		scanf("%s",nonterminals);
+	
+    printf("\nenter the values of  terminals\n");
+	
+		scanf("%s",terminals);
+
+	printf("\nenter the first values\n");
+	for(i=0;i<n;i++)
+	{
+		scanf("%s",&first[i]);
+	}
+	printf("\nenter the follow values\n");
+	for(i=0;i<n;i++)
+	{
+		scanf("%s",&follow[i]);
+	}
+	for(i=1,j=1;i<=nt,j<=t;i++,j++)
+	{
+		
+		*table[i][0]=nonterminals[i-1];
+		*table[0][j]=terminals[j-1];
+	}
+	h=t;
+	*table[0][h+1]='$';
+   for(i=0;i<=n;i++)
+   {
+		//check=prod[i][0];
+		for(j=1;j<=nt;j++)
+		{
+         if(prod[i][0]==(*table[j][0]))
+			r=j;
+		}
+        for(k=0;k<=strlen(first[i]);k++)
+		{
+
+			if(prod[i][4]!='#')
+
+              {
+				 for(j=1;j<=t+1;j++)
+				 {
+				 if(isupper(prod[i][4]))
+				 {
+			     if(first[i][k]==*table[0][j])
+			     strcpy(table[r][j],prod[i]);
+				 }
+				 else
+				 {
+					 if(first[i][k]==*table[0][j] && prod[i][4]==first[i][k])
+			         strcpy(table[r][j],prod[i]);
+				}
+			}
+
+			}
+			else
+			{
+		     for(m=0;m<=strlen(follow[i]);m++)
+		    {
+			for(j=1;j<=t+1;j++)
+			  { if(follow[i][m]==*table[0][j])
+			  strcpy(table[r][j],prod[i]);
+		      }
+		    }
+				
+			}
+		}
+   
+   }
+	
+
+	printf("-----------------------------------------------------------");
+	for( i=0;i<=nt;i++)
+	{
+	  printf("\n\n");
+	  for(j=0;j<=t+1;j++)
+	  {
+	   
+		  printf("%s\t",table[i][j]);
+		
+	}
+	  
+	}
+
+	printf("\n----------------------------------------------------------");
+	
+}
+OUTPUT:
+Total no of productions, no of terminals and nonterminals: 3 3 3
+
+Enter productions in this format LEFT->RIGHT
+
+Production 1:
+E->a+B
+
+Production 2:
+A->a
+
+Production 3:
+B->)b
+
+Enter the values of non terminals:
+EAB
+
+Enter the values of terminals:
++ab
+
+Enter the first values:
+$
+
+--------------------------------------------------
+        +       a       b       $
+--------------------------------------------------
+E                E->a+B
+A                A->a
+B                        B->)b
+--------------------------------------------------
