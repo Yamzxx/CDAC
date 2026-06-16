@@ -1,0 +1,155 @@
+Aim: Program to recognize Tokens for a given simple C program
+Algorithm for lexical analyzer:
+function  lexan:  integer ; [ Returns an integer encoding of token]
+var    lexbuf :   array[ 0 .. 100 ] of  char ;
+         c :            char ;
+begin
+           loop begin
+                   read a character into c ;
+                   if  c  is a blank or a tab  then
+                           do nothing
+                   else if  c  is a newline  then
+                           lineno : = lineno + 1
+                   else if  c  is a digit  then  begin
+                        set  tokenval  to the value of this and following digits ;
+                           return  NUM
+                   end
+else if  c  is a letter  then  begin
+                      place  c  and successive letters and digits into  lexbuf ;
+                          p  : = lookup ( lexbuf ) ;
+                          if  p  = 0  then
+                                  p : = insert ( lexbf, ID) ;
+                          tokenval : = p
+                          return  the token field of table entry p
+                  end
+                  else 
+                          set  tokenval  to NONE ;  / * there is no attribute * /
+                          return  integer encoding of character c
+                  end
+end
+Program:
+1. Program to recognize Tokens for a given simple C program
+
+/*STANDALONE lexical analyzer PROGRAM*/
+
+#include<stdio.h>
+#include<ctype.h>
+#include<string.h>
+int main()
+{
+FILE *input,*output;
+int l=1;
+int t=0;
+int j=0;
+int i,flag;
+char ch,str[20];
+char keyword[30][30]={"int","main","if","else","do","while","struct","goto"};
+input=fopen("input.txt","r");
+output=fopen("output.txt","w");
+fprintf(output,"Line no. \t Token no.\t Token\t Lexeme\n\n");
+while(!feof(input))
+{
+i=0;
+flag=0;
+ch=fgetc(input);
+if( ch=='+' || ch== '-' || ch=='*' || ch=='/' || ch=='<' || ch=='>')
+{
+fprintf(output,"%6d\t\t %6d\t\t Operator\t %6c\n",l,t,ch);
+t++;
+}
+else if( ch==';' || ch=='{' || ch=='}' || ch=='(' || ch==')' || ch=='?' || ch=='@' || ch=='!' || ch=='%')
+{
+fprintf(output,"%6d\t\t %6d\t\t Special symbol\t %6c\n",l,t,ch);
+t++;
+}
+else if(isdigit(ch))
+{
+fprintf(output,"%d6\t\t %6d\t\t Digit\t\t %6c\n",l,t,ch);
+t++;
+}
+else if(isalpha(ch))
+{
+str[i]=ch;
+i++;
+ch=fgetc(input);
+while(isalnum(ch)&& ch!=' ')
+{
+str[i]=ch;
+i++;
+ch=fgetc(input);
+}
+str[i]='\0';
+for(j=0;j<=30;j++)
+{
+if(strcmp(str,keyword[j])==0)
+{
+flag=1;
+break;
+}
+}
+if(flag==1)
+{
+fprintf(output,"%6d\t\t %6d\t\t Keyword\t %6s\n",l,t,str);
+t++;
+}
+else
+{
+fprintf(output,"%6d\t\t %6d\t\t Identifier\t %6s\n",l,t,str);
+t++;
+}
+
+}
+else if(ch=='\n')
+{
+l++;
+}
+}
+fclose(input);
+fclose(output);
+output=fopen("output.txt","r");
+while(!feof(output))
+{
+	ch=fgetc(output);
+	printf("%c",ch);
+}
+fclose(output);
+return 0;
+}
+
+INPUT.TXT
+#include < stdio.h >
+void main ()
+{
+int a,b,c ;
+c = a + 9 ;
+}
+
+OUTPUT.TXT
+Line no. 	 Token no.	 Token	 Lexeme
+
+     1		      0		 Identifier	 include
+     1		      1		 Operator	      <
+     1		      2		 Identifier	  stdio
+     1		      3		 Identifier	      h
+     1		      4		 Operator	      >
+     2		      5		 Identifier	   void
+     2		      6		 Keyword	   main
+     2		      7		 Special symbol	      (
+     2		      8		 Special symbol	      )
+     3		      9		 Special symbol	      {
+     4		     10		 Keyword	    int
+     4		     11		 Identifier	      a
+     4		     12		 Identifier	      b
+     4		     13		 Identifier	      c
+     4		     14		 Special symbol	      ;
+     5		     15		 Identifier	      c
+     5		     16		 Special symbol	      =
+     5		     17		 Identifier	      a
+     5		     18		 Operator	      +
+     5		     19		 Digit		      9
+     5		     20		 Special symbol	      ;
+     6		     21		 Special symbol	      }
+
+
+
+
